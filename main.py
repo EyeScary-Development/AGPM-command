@@ -1,3 +1,4 @@
+import json
 import os
 import requests
 #temp list of packages
@@ -20,7 +21,18 @@ def uninstall(item):
     os.system("curl -O https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/protocols/uninstall.sh && bash uninstall.sh && rm uninstall.sh")
 
 def update(item):
-    os.system("curl -O https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/protocols/update.sh && bash update.sh && rm update.sh")
+    response = requests.get("https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/metadata.json")
+    response.raise_for_status()
+    metadata = json.loads(response.text)
+    cloudver = metadata.get('version')
+    file_path = os.path.join(os.path.expanduser('~'), '.agpm', item, 'metadata.json')
+    with open(file_path, 'r') as f:
+        localmetadata = json.load(f)
+    localver = localmetadata.get('version')
+    if localver != cloudver:
+        os.system("curl -O https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/protocols/update.sh && bash update.sh && rm update.sh")
+    else:
+        print("Package already up to date, command already satisfied")
 
 def operate():
     task, app=input("AGPM mode (Just ctrl C to quit): "), input("Program to operate on: ")
@@ -32,7 +44,8 @@ def operate():
                 uninstall(app)
             case "update":
                 update(app)
-
+    else:
+        print("package doesn't exist :(")
 def main():
     while True:
         operate()

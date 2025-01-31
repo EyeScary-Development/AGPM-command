@@ -14,6 +14,16 @@ def checkpackagelist(item):
     else:
         return False
 
+def lookup(item):
+    response = requests.get("https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/metadata.json")
+    response.raise_for_status()
+    metadata = json.loads(response.text)
+    clouddesc = metadata.get('description')
+    cloudnotes= metadata.get('releaseNotes')
+    print("package name: " + str(item))
+    print("description: " + str(clouddesc))
+    print("latest release notes: " + str(cloudnotes))
+
 def install(item):
     os.system("curl -O https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/protocols/install.sh && bash install.sh && rm install.sh")
 
@@ -44,8 +54,11 @@ def operate():
                 uninstall(app)
             case "update":
                 update(app)
+            case "search":
+                lookup(app)
     else:
         print("package doesn't exist :(")
+
 def main():
     while True:
         operate()

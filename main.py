@@ -44,8 +44,7 @@ def update(item):
     else:
         print("Package already up to date, command already satisfied")
 
-def operate():
-    task, app=input("AGPM mode (Just ctrl C to quit): "), input("Program to operate on: ")
+def operate(task, app):
     if checkpackagelist(app):
         match task:
             case "install":
@@ -61,5 +60,6 @@ def operate():
 
 def main():
     while True:
-        operate()
+        task,app = input("operation: "), input("app to operate: ")
+        operate(task,app)
 main()

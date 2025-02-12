@@ -57,9 +57,3 @@ def operate(task, app):
                 lookup(app)
     else:
         print("package doesn't exist :(")
-
-def main():
-    while True:
-        task,app = input("operation: "), input("app to operate: ")
-        operate(task,app)
-main()

@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+import sys
 #temp list of packages
 pkglist=[]
 
@@ -57,3 +58,15 @@ def operate(task, app):
                 lookup(app)
     else:
         print("package doesn't exist :(")
+
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: agpm-pyp <task> <app>")
+        sys.exit(1)
+
+    _, task, app = sys.argv
+    operate(task, app)
+
+if __name__ == "__main__":
+    main()
+

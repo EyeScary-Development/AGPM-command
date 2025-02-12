@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agpm"
-version = "1.0.2"
+version = "1.1.0"
 description = "A package manager made in python to download EyeScary Development projects"
 readme = "README.md"
 authors = [{ name = "EyeScary Development"}]
@@ -14,4 +14,4 @@ dependencies = [
 ]
 
 [project.scripts]
-agpm-pyp = "agpm:operate"
+agpm-pyp = "agpm:main"

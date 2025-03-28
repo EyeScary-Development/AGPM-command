@@ -3,7 +3,6 @@ import json
 import os
 import requests
 #temp list of packages
-plisturl = ''
 url = ''
 metapath = os.path.join(os.path.expanduser('~'), '.agpm', 'localmetadata.json')
 settingspath = os.path.join(os.path.expanduser('~'), '.agpm', 'sources.escnf')
@@ -24,7 +23,7 @@ def setsource(srcurl):
 
 def fetchlist():
     print("fetching cloud metadata...")
-    response = requests.get(url)
+    response = requests.get(url+"packagelist.json")
     response.raise_for_status()
     return response.json()
 
@@ -101,8 +100,7 @@ def operate(task, app):
         print("package doesn't exist, terminating...")
 
 def main():
-    global plisturl, url
-    plisturl=fetchsource() + 'packagelist.json'
+    global url
     url=fetchsource()
     if len(sys.argv) != 3:
         print("Usage: agpm-pyp <task> <app>")

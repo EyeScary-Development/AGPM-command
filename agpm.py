@@ -3,16 +3,40 @@ import json
 import os
 import requests
 #temp list of packages
-url = 'https://eyescary-development.github.io/CDN/agpm_packages/packagelist.json'
+plisturl = ''
+url = ''
+metapath = os.path.join(os.path.expanduser('~'), '.agpm', 'localmetadata.json')
+settingspath = os.path.join(os.path.expanduser('~'), '.agpm', 'sources.escnf')
+
+def fetchsource():
+    print("fetching source list...")
+    try:
+      with open(settingspath, 'r') as file:
+        source = file.readline()
+        print("Source url: " + source)
+        return source
+    except Exception:
+        return "https://eyescary-development.github.io/CDN/agpm_packages/packagelist.json"
+
+def setsource(srcurl):
+    with open(settingspath, 'w') as file:
+        file.write(srcurl)
+
 def fetchlist():
+    print("fetching cloud metadata...")
     response = requests.get(url)
     response.raise_for_status()
     return response.json()
 
+def fetchlocalmet():
+    print("fetch local metadata...")
+    with open(metapath, 'r') as f:
+        localmetadata = json.load(f)
+    return localmetadata
+
 def checkpackagelist(item):
-    response = requests.get(url)
-    response.raise_for_status()
     pkglist = fetchlist()
+    print("checking package list...")
     try:
         temp=pkglist[item]
         return True
@@ -25,42 +49,37 @@ def lookup(item):
     print("description: " + str(metadata[item]["description"]))
     print("latest release notes: " + str(metadata[item]["releaseNotes"]))
 
+def metawrite(metadata, path):
+    with open(path, 'w') as f:
+        json.dump(metadata, f, indent=2)
+
 def install(item):
-    os.system("curl -O https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/protocols/install.sh && bash install.sh && rm install.sh")
-    path=os.path.join(os.path.expanduser('~'), '.agpm', 'localmetadata.json')
+    os.system("curl -O"+url+item+"/protocols/install.sh && bash install.sh && rm install.sh")
     try:
       with open(path, 'r') as f:
         localmetadata = json.load(f)
     except Exception:
-      with open(path, 'w') as f:
-          f.write("{}")
-      localmetadata = {}
+        localmetadata = {}
+        metawrite(localmetadata, metapath)
     cloudmetadata=fetchlist()
     localmetadata[item]=cloudmetadata[item]
-    with open(path, 'w') as f:
-        json.dump(localmetadata, f, indent=2)
+    metawrite(localmetadata, metapath)
 
 def uninstall(item):
-    os.system("curl -O https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/protocols/uninstall.sh && bash uninstall.sh && rm uninstall.sh")
-    file_path=os.path.join(os.path.expanduser('~'), '.agpm', 'localmetadata.json')
-    with open(file_path, 'r') as f:
-        localmetadata=json.load(f)
+    os.system("curl -O"+url+item+"/protocols/uninstall.sh && bash uninstall.sh && rm uninstall.sh")
+    localmetadata = fetchlocalmet()
     localmetadata.pop(item, None)
-    with open(file_path, 'w') as f:
-        json.dump(localmetadata, f, indent=2)
+    metawrite(localmetadata, metapath)
 
 def update(item):
     metadata=fetchlist()
     cloudver = metadata[item]["version"]
-    file_path = os.path.join(os.path.expanduser('~'), '.agpm', 'localmetadata.json')
-    with open(file_path, 'r') as f:
-        localmetadata = json.load(f)
+    localmetadata = fetchlocalmet()
     localver = localmetadata[item]["version"]
     if localver != cloudver:
-        os.system("curl -O https://eyescary-development.github.io/CDN/agpm_packages/"+item+"/protocols/update.sh && bash update.sh && rm update.sh")
+        os.system("curl -O"+url+item+"/protocols/update.sh && bash update.sh && rm update.sh")
         localmetadata[item]=cloudmetadata[item]
-        with open(file_path, 'w') as f:
-            json.dump(localmetadata, f, indent=2)
+        metawrite(localmetadata, metapath)
     else:
         print("Package already up to date, command already satisfied")
 
@@ -75,10 +94,16 @@ def operate(task, app):
                 update(app)
             case "search":
                 lookup(app)
+            case 'srcset':
+                setsource(app)
+
     else:
-        print("package doesn't exist :(")
+        print("package doesn't exist, terminating...")
 
 def main():
+    global plisturl, url
+    plisturl=fetchsource() + 'packagelist.json'
+    url=fetchsource()
     if len(sys.argv) != 3:
         print("Usage: agpm-pyp <task> <app>")
         sys.exit(1)
